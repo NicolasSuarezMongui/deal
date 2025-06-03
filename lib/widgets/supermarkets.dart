@@ -1,12 +1,16 @@
+import 'package:flutter/material.dart';
 import 'package:deal/data/productos_database.dart';
 import 'package:deal/models/producto.dart';
-import 'package:flutter/material.dart';
+import 'package:deal/widgets/categories.dart';
+import 'package:deal/widgets/promo_carrusel.dart';
+import 'package:deal/widgets/searchbar.dart';
+import 'package:deal/widgets/rounded_app_bar.dart';
+import 'package:deal/widgets/product_card.dart';
+import 'package:deal/screens/product_list_screen.dart';
+import 'package:deal/services/cart_service.dart';
+import 'package:provider/provider.dart';
+import 'package:deal/widgets/custom_bottom_nav_bar.dart';
 
-import '../widgets/categories.dart';
-import '../widgets/promo_carrusel.dart';
-import '../widgets/searchbar.dart';
-import '../widgets/rounded_app_bar.dart';
-import '../widgets/product_card.dart';
 
 // Modelo mejorado para representar supermercados con más información
 class Supermercado {
@@ -39,7 +43,7 @@ class SupermarketWidget extends StatelessWidget {
       id: 'd1',
       imageUrl: 'assets/logo_d1.png',
       titulo: 'Supermercado 1',
-      nombre: 'Tiendas D1',
+      nombre: 'D1',
       colorPrimario: Color(0xFFE31E24),
       colorSecundario: Color(0xFFFFFFFF),
       colorTexto: Colors.white,
@@ -51,8 +55,8 @@ class SupermarketWidget extends StatelessWidget {
       titulo: 'Supermercado 2',
       nombre: 'Éxito',
       colorPrimario: Color(0xFFFDD700),
-      colorSecundario: Color(0xFF76C043),
-      colorTexto: Colors.white,
+      colorSecundario: Color(0xFFFFFFFF),
+      colorTexto: Colors.black,
       slogan: 'Vive la experiencia',
     ),
     Supermercado(
@@ -60,8 +64,8 @@ class SupermarketWidget extends StatelessWidget {
       imageUrl: 'assets/logo_makro.png',
       titulo: 'Supermercado 3',
       nombre: 'Makro',
-      colorPrimario: Color(0xFF1E3A8A),
-      colorSecundario: Color(0xFF3B82F6),
+      colorPrimario: Color(0xFFE31E24),
+      colorSecundario: Color(0xFFFFFFFF),
       colorTexto: Colors.white,
       slogan: 'Mayorista de Colombia',
     ),
@@ -71,7 +75,7 @@ class SupermarketWidget extends StatelessWidget {
       titulo: 'Supermercado 4',
       nombre: 'Jumbo',
       colorPrimario: Color(0xFF2E7D32),
-      colorSecundario: Color(0xFF66BB6A),
+      colorSecundario: Color(0xFFFFFFFF),
       colorTexto: Colors.white,
       slogan: 'Grandes momentos',
     ),
@@ -80,8 +84,8 @@ class SupermarketWidget extends StatelessWidget {
       imageUrl: 'assets/logo_ara.png',
       titulo: 'Supermercado 5',
       nombre: 'Ara',
-        colorPrimario: Color(0xFFFF6B35),
-      colorSecundario: Color(0xFFFFA726),
+      colorPrimario: Color(0xFFFF6B35),
+      colorSecundario: Color(0xFFFFFFFF),
       colorTexto: Colors.white,
       slogan: 'Cerca de ti',
     ),
@@ -168,6 +172,7 @@ class SupermarketDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
 
     final List<Producto> productos = ProductosDatabase().obtenerProductosPorSupermercado(supermercado.id);
+    final listaCategoriasPropias = CategoryData.obtenerCategoriasPorSupermercado(supermercado.id);
 
     return Scaffold(
       // AppBar personalizado con los colores del supermercado
@@ -217,12 +222,29 @@ class SupermarketDetailScreen extends StatelessWidget {
               ),
             ),
 
-            CategoryWidget(),
+            CategoryWidget(
+              categorias: listaCategoriasPropias,
+              onCategoryTap: (String categoriaSeleccionada) {
+                // 1) Filtramos por esa categoría SOLO en este supermercado
+                final productosFiltrados = ProductosDatabase()
+                    .filtrarPorCategoria(supermercado.id, categoriaSeleccionada);
 
+                // 2) Navegamos a ProductListScreen con título y lista filtrada
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductListScreen(
+                      title: '$categoriaSeleccionada en ${supermercado.nombre}',
+                      productos: productosFiltrados,
+                    ),
+                  ),
+                );
+              },
+            ),
             SizedBox(height: 16),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal:  16.0),
               child: GridView.builder(
                 shrinkWrap: true,                          // importante para que no intente hacer scroll propio
                 physics: NeverScrollableScrollPhysics(),   // delega el scroll al SingleChildScrollView
@@ -236,12 +258,15 @@ class SupermarketDetailScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final p = productos[index];
                   return ProductCard(
-                    imageUrl: p.imageUrl ?? 'assets/logo_${p.supermercadoId}.png',           // asume que tu modelo tiene esta propiedad
-                    title: p.nombre,
-                    subtitle: "Peso",
-                    price: '\$ ${p.precio}',
+                    producto: p,
                     onAdd: () {
-                      // tu lógica de agregar p al carrito
+                      context.read<CartService>().addProduct(p);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${p.nombre} agregado al carrito'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
                     },
                   );
                 },
@@ -251,25 +276,7 @@ class SupermarketDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category),
-            label: 'Productos',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Lista'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Carrito',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Menu'),
-        ],
-        selectedItemColor: Colors.teal[800],
-        unselectedItemColor: Colors.white,
-        backgroundColor: Color(0xFF0B132B),
-      ),
+      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 1),
       backgroundColor: Colors.white,
     );
   }

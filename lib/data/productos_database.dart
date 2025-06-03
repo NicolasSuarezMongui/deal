@@ -210,4 +210,22 @@ class ProductosDatabase {
       'productosEnOferta': ofertas.length,
     };
   }
+
+  List<Producto> obtenerProductosPorCategoriaGlobal(String categoria) {
+    List<Producto> resultado = [];
+    _productos.forEach((superId, lista) {
+      resultado.addAll(
+        lista.where((producto) => producto.categoria == categoria),
+      );
+    });
+    return resultado;
+  }
+
+  List<Producto> obtenerProductos(){
+    List<Producto> resultado = [];
+    _productos.forEach((superId, lista) {
+      resultado.addAll(lista);
+    });
+    return resultado;
+  }
 }

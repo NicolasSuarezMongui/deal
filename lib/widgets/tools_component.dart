@@ -1,4 +1,7 @@
+// /lib/widgets/tools_component.dart
+
 import 'package:flutter/material.dart';
+import 'package:deal/screens/map_screen.dart';  // Asegúrate de usar la ruta correcta
 
 class ToolsComponent extends StatefulWidget {
   @override
@@ -14,43 +17,66 @@ class _ToolsComponentState extends State<ToolsComponent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ------------------------
+        // 1) Pestañas (Top 10, Descuentos, Nuevos)
+        // ------------------------
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 5.0),
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.0),
           height: 30,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Color(0xFFABD1D1), width: 1.5),
+            border: Border.all(color: const Color(0xFFABD1D1), width: 1.5),
           ),
           child: Row(
             children: List.generate(_tabs.length, (index) {
               return _buildTabButton(_tabs[index], _selectedIndex == index, index);
-            })
+            }),
           ),
         ),
 
-        Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Text('Herramientas', style: TextStyle(fontSize: 15)),
-              ),
+        // ------------------------
+        // 2) Título “Herramientas”
+        // ------------------------
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(
+            child: Text(
+              'Herramientas',
+              style: TextStyle(fontSize: 15),
             ),
+          ),
+        ),
 
+        // ------------------------
+        // 3) Fila con “Mapa” y “Scanner”
+        // ------------------------
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
+              // Envolvemos solo el bloque “Mapa” en GestureDetector para navegación
               Expanded(
-                child: _buildToolContainer('Mapa', 'assets/tools_map.png'),
+                child: GestureDetector(
+                  onTap: () {
+                    // Navegar a MapScreen cuando el usuario pulse “Mapa”
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MapScreen()),
+                    );
+                  },
+                  child: _buildToolContainer('Mapa', 'assets/tools_map.png'),
+                ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
+              // Scanner puede quedarse sin onTap por ahora, o implementarlo a tu gusto
               Expanded(
                 child: _buildToolContainer('Scanner', 'assets/tools_scan.png'),
               ),
             ],
-          )
+          ),
         ),
-      ]
+      ],
     );
   }
 
@@ -65,13 +91,13 @@ class _ToolsComponentState extends State<ToolsComponent> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            color: isSelected ? Color(0xFFD7EFEF) : Colors.transparent,
+            color: isSelected ? const Color(0xFFD7EFEF) : Colors.transparent,
           ),
           child: Center(
             child: Text(
               text,
               style: TextStyle(
-                color: isSelected ? Colors.white : Color(0xFFABD1D1),
+                color: isSelected ? Colors.white : const Color(0xFFABD1D1),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -81,13 +107,13 @@ class _ToolsComponentState extends State<ToolsComponent> {
     );
   }
 
-Widget _buildToolContainer(String title, String imagePath) {
+  Widget _buildToolContainer(String title, String imagePath) {
     return Container(
-      padding: EdgeInsets.all(6),
+      padding: const EdgeInsets.all(6),
       height: 120,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFABD1D1), width: 1.5),
+        border: Border.all(color: const Color(0xFFABD1D1), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,14 +121,14 @@ Widget _buildToolContainer(String title, String imagePath) {
           // Título arriba a la izquierda
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
           ),
           // Espaciador que empuja la imagen hacia abajo
-          Expanded(child: SizedBox()),
+          const Expanded(child: SizedBox()),
           // Imagen abajo a la derecha
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -115,9 +141,9 @@ Widget _buildToolContainer(String title, String imagePath) {
                   width: 50,
                   height: 50,
                   fit: BoxFit.contain,
-                  color: Color(0xFF84B9BD), // Aplica el mismo color que tenían los iconos CustomPaint
+                  color: const Color(0xFF84B9BD),
                   errorBuilder: (context, error, stackTrace) {
-                    // Widget de fallback en caso de que la imagen no se encuentre
+                    // Fallback si no existe el asset
                     return Container(
                       width: 50,
                       height: 50,
@@ -128,7 +154,7 @@ Widget _buildToolContainer(String title, String imagePath) {
                       child: Icon(
                         title == 'Mapa' ? Icons.map : Icons.qr_code_scanner,
                         size: 30,
-                        color: Color(0xFF84B9BD),
+                        color: const Color(0xFF84B9BD),
                       ),
                     );
                   },
@@ -139,5 +165,5 @@ Widget _buildToolContainer(String title, String imagePath) {
         ],
       ),
     );
-  } 
+  }
 }
